@@ -1,7 +1,8 @@
 from openai import AsyncOpenAI
 import chainlit as cl
+import os
 
-API_KEY = "sk-N0bqh035SgYk0qcowyzfLIGSi214nsjj6ENFbZf0LpOzDBRA"
+API_KEY = os.getenv("API_KEY")
 BASE_URL = "https://api.deepbricks.ai/v1/"
 
 client = AsyncOpenAI(api_key=API_KEY, base_url=BASE_URL)
