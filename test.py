@@ -1,8 +1,9 @@
-from dotenv import load_dotenv
 import os
 
-load_dotenv()
+for k, v in os.environ.items():
+    print(f'{k}={v}')
 
-# printing environment variables
-API_KEY = os.getenv("API_KEY")
-print(API_KEY)
+
+# home_dir =os.environ['HOME']
+DB_PWD = os.environ['DB_PWD']
+print(DB_PWD)

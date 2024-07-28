@@ -16,12 +16,12 @@ import os
 
 load_dotenv()
 
-DB_PWD = os.getenv("DB_PWD")
+# DB_PWD = os.getenv("DB_PWD")
 
 # 数据库配置
 DB_CONFIG = {
     'user': 'root',
-    'password': DB_PWD,
+    'password': os.getenv("DB_PWD"),
     'host': '127.0.0.1',
     'database': 'user_db',
 }
@@ -56,7 +56,7 @@ API_KEY = os.getenv("API_KEY")
 BASE_URL = "https://api.deepbricks.ai/v1/"
 client = AsyncOpenAI(api_key=API_KEY, base_url=BASE_URL)
 settings = {
-    "model": "gpt-4-turbo",
+    "model": "llama-3.1-405b",
     "temperature": 0.7,
     "max_tokens": 4095,
     "top_p": 1,
