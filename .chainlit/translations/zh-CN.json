@@ -45,7 +45,7 @@
       },
       "auth": {
         "authLogin": {
-          "title": "登录以访问应用（首次登录自动注册）",
+          "title": "登录（首次登录自动注册）",
           "form": {
             "email": "电子邮箱地址",
             "password": "密码",
