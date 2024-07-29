@@ -71,7 +71,7 @@ def setup_runnable():
     model = ChatOpenAI(streaming=True)
     prompt = ChatPromptTemplate.from_messages(
         [
-            ("system", "You are a helpful assistant. You reply in the same language that the user uses."),
+            ("system", "You are a helpful assistant. You reply every response in Chinese."),
             MessagesPlaceholder(variable_name="history"),
             ("human", "{question}"),
         ]
