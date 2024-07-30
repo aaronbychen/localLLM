@@ -11,8 +11,8 @@ import chainlit as cl
 import bcrypt
 import mysql.connector
 from openai import AsyncOpenAI
-from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -71,7 +71,7 @@ def setup_runnable():
     model = ChatOpenAI(streaming=True)
     prompt = ChatPromptTemplate.from_messages(
         [
-            ("system", "You are a helpful assistant. You reply every response in Chinese."),
+            ("system", "You are a helpful assistant. You reply every dialogue in Chinese."),
             MessagesPlaceholder(variable_name="history"),
             ("human", "{question}"),
         ]
