@@ -71,7 +71,7 @@ def setup_runnable():
     model = ChatOpenAI(streaming=True)
     prompt = ChatPromptTemplate.from_messages(
         [
-            ("system", "You are a helpful assistant. You reply every dialogue in Chinese."),
+            ("system", "You are a helpful assistant. Answer every dialogue in Chinese."),
             MessagesPlaceholder(variable_name="history"),
             ("human", "{question}"),
         ]
@@ -160,3 +160,22 @@ async def on_message(message: cl.Message):
     # 保存会话状态
     cl.user_session.set("memory", memory)
     cl.user_session.set("message_history", message_history)
+
+# @cl.on_message
+# async def on_message(message: cl.Message):
+#     memory = cl.user_session.get("memory")  # type: ConversationBufferMemory
+#
+#     runnable = cl.user_session.get("runnable")  # type: Runnable
+#
+#     res = cl.Message(content="")
+#
+#     async for chunk in runnable.astream(
+#             {"question": message.content},
+#             config=RunnableConfig(callbacks=[cl.LangchainCallbackHandler()]),
+#     ):
+#         await res.stream_token(chunk)
+#
+#     await res.send()
+#
+#     memory.chat_memory.add_user_message(message.content)
+#     memory.chat_memory.add_ai_message(res.content)

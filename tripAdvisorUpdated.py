@@ -31,6 +31,7 @@ Begin! Remember to answer as a passionate and informative travel expert when giv
 Question: {input}
 {agent_scratchpad}"""
 
+
 class CustomPromptTemplate(StringPromptTemplate):
     template: str
     tools: List[Tool]
@@ -45,6 +46,7 @@ class CustomPromptTemplate(StringPromptTemplate):
         kwargs["tools"] = "\n".join([f"{tool.name}: {tool.description}" for tool in self.tools])
         kwargs["tool_names"] = ", ".join([tool.name for tool in self.tools])
         return self.template.format(**kwargs)
+
 
 class CustomOutputParser(AgentOutputParser):
     def parse(self, llm_output: str) -> Union[AgentAction, AgentFinish]:
@@ -61,17 +63,22 @@ class CustomOutputParser(AgentOutputParser):
         action_input = match.group(2)
         return AgentAction(tool=action, tool_input=action_input.strip(" ").strip('"'), log=llm_output)
 
+
 def search_online(input_text):
     return DuckDuckGoSearchRun().run(f"site:tripadvisor.com things to do {input_text}")
+
 
 def search_hotel(input_text):
     return DuckDuckGoSearchRun().run(f"site:booking.com {input_text}")
 
+
 def search_flight(input_text):
     return DuckDuckGoSearchRun().run(f"site:skyscanner.com {input_text}")
 
+
 def search_general(input_text):
     return DuckDuckGoSearchRun().run(f"{input_text}")
+
 
 @cl.on_chat_start
 def start():
@@ -118,6 +125,7 @@ def start():
 
     agent_executor = AgentExecutor.from_agent_and_tools(agent=agent, tools=tools, verbose=True)
     cl.user_session.set("agent", agent_executor)
+
 
 @cl.on_message
 async def main(message):
