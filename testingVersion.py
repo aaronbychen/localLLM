@@ -36,13 +36,14 @@ BASE_URL = "https://api.deepbricks.ai/v1/"
 client = AsyncOpenAI(api_key=API_KEY, base_url=BASE_URL)
 settings = {
     "model": "llama-3.1-405b",
-    "temperature": 0,
+    "temperature": 0.5,
     "max_tokens": 4095,
     "top_p": 1,
     "frequency_penalty": 0,
     "presence_penalty": 0,
 }
 
+opening_line = "我是基于" + settings.get("model") + "的API接口的聊天机器人，请随时向我提问 :)\n是否开启网络搜索（是/否）？"
 
 # Function to search using Bing Search API
 def search(query):
@@ -121,8 +122,8 @@ def auth_callback(username: str, password: str) -> Optional[cl.User]:
 @cl.on_chat_start
 async def on_chat_start():
     cl.user_session.set("memory", ConversationBufferMemory(return_messages=True))
-    setup_runnable()
-    await cl.Message(content="我是基于" + settings.get("model") + "的API接口的聊天机器人，请随时向我提问 :)").send()
+    cl.user_session.set("search_option", None)
+    await cl.Message(content=opening_line).send()
 
 
 # Chat resume callback
@@ -136,7 +137,8 @@ async def on_chat_resume(thread: ThreadDict):
         else:
             memory.chat_memory.add_ai_message(message["output"])
     cl.user_session.set("memory", memory)
-    setup_runnable()
+    cl.user_session.set("search_option", None)
+    await cl.Message(content=opening_line).send()
 
 
 # Message handling callback
@@ -144,26 +146,37 @@ async def on_chat_resume(thread: ThreadDict):
 async def on_message(message: cl.Message):
     memory = cl.user_session.get("memory")  # type: ConversationBufferMemory
     message_history = cl.user_session.get("message_history", [])
+    search_option = cl.user_session.get("search_option")
+
+    if search_option is None:
+        if message.content.strip().lower() == "是":
+            cl.user_session.set("search_option", True)
+            await cl.Message(content="网络搜索已开启，请输入您的问题 :)").send()
+        elif message.content.strip().lower() == "否":
+            cl.user_session.set("search_option", False)
+            await cl.Message(content="网络搜索未开启，请输入您的问题 :)").send()
+        else:
+            await cl.Message(content="无效输入，请输入“是”或“否” :)").send()
+        return
 
     message_history.append({"role": "user", "content": message.content})
     cl.user_session.set("message_history", message_history)
 
     try:
-        # Bing search API call
-        search_results = search(message.content)
-        search_prompts = [
-            f"来源:\n标题: {result['name']}\n网址: {result['url']}\n内容: {result['snippet']}\n" for result in
-            search_results
-        ]
-        search_content = "Use the following sources to answer the question:\n\n".join(
-            search_prompts) + "\n\nQuestion: " + message.content + "\n\n"
+        if cl.user_session.get("search_option"):
+            # Bing search API call
+            search_results = search(message.content)
+            search_prompts = [
+                f"来源:\n标题: {result['name']}\n网址: {result['url']}\n内容: {result['snippet']}\n" for result in search_results
+            ]
+            search_content = "Use the following sources to answer the question:\n\n".join(search_prompts) + "\n\nQuestion: " + message.content + "\n\n"
 
-        # Sending the search results to the user
-        await cl.Message(content=search_content).send()
+            # Sending the search results to the user
+            await cl.Message(content=search_content).send()
 
-        # Add search results to the message history
-        message_history.append({"role": "system", "content": search_content})
-        cl.user_session.set("message_history", message_history)
+            # Add search results to the message history
+            message_history.append({"role": "system", "content": search_content})
+            cl.user_session.set("message_history", message_history)
 
         # Sending message to Llama 3.1
         msg = cl.Message(content="")

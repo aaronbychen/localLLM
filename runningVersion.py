@@ -1,3 +1,7 @@
+import os
+from pprint import pprint
+import requests
+from dotenv import load_dotenv
 from operator import itemgetter
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -11,14 +15,10 @@ import chainlit as cl
 import bcrypt
 import mysql.connector
 from openai import AsyncOpenAI
-import os
-from dotenv import load_dotenv
 
 load_dotenv()
 
-# DB_PWD = os.getenv("DB_PWD")
-
-# 数据库配置
+# DB configuration
 DB_CONFIG = {
     'user': 'root',
     'password': os.getenv("DB_PWD"),
@@ -26,13 +26,44 @@ DB_CONFIG = {
     'database': 'user_db',
 }
 
+# Bing Search API configuration
+subscription_key = os.getenv('BING_SEARCH_V7_SUBSCRIPTION_KEY')
+endpoint = os.getenv('BING_SEARCH_V7_ENDPOINT') + "v7.0/search"
 
-# 获取数据库连接
+# API client configuration for Llama 3.1
+API_KEY = os.getenv("API_KEY")
+BASE_URL = "https://api.deepbricks.ai/v1/"
+client = AsyncOpenAI(api_key=API_KEY, base_url=BASE_URL)
+settings = {
+    "model": "llama-3.1-405b",
+    "temperature": 0.5,
+    "max_tokens": 4095,
+    "top_p": 1,
+    "frequency_penalty": 0,
+    "presence_penalty": 0,
+}
+
+opening_line = "我是基于" + settings.get("model") + "的API接口的聊天机器人，请随时向我提问 :)\n网络搜索花费资源稍多，暂不支持上下文，是否开启网络搜索（是/否）？"
+
+# Function to search using Bing Search API
+def search(query):
+    mkt = 'zh-CN'
+    params = {'q': query, 'mkt': mkt}
+    headers = {'Ocp-Apim-Subscription-Key': subscription_key}
+
+    try:
+        response = requests.get(endpoint, headers=headers, params=params)
+        response.raise_for_status()
+        return response.json()['webPages']['value']
+    except Exception as ex:
+        raise ex
+
+
+# Database connection and user management functions
 def get_db_connection():
     return mysql.connector.connect(**DB_CONFIG)
 
 
-# 读取用户信息
 def read_user(username):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -42,7 +73,6 @@ def read_user(username):
     return user
 
 
-# 写入用户信息
 def write_user(username, password_hash):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -51,21 +81,7 @@ def write_user(username, password_hash):
     conn.close()
 
 
-# 配置API客户端
-API_KEY = os.getenv("API_KEY")
-BASE_URL = "https://api.deepbricks.ai/v1/"
-client = AsyncOpenAI(api_key=API_KEY, base_url=BASE_URL)
-settings = {
-    "model": "llama-3.1-405b",
-    "temperature": 0.7,
-    "max_tokens": 4095,
-    "top_p": 1,
-    "frequency_penalty": 0,
-    "presence_penalty": 0,
-}
-
-
-# 设置可运行模型
+# Setup runnable model
 def setup_runnable():
     memory = cl.user_session.get("memory")  # type: ConversationBufferMemory
     model = ChatOpenAI(streaming=True)
@@ -88,14 +104,13 @@ def setup_runnable():
     cl.user_session.set("runnable", runnable)
 
 
-# 用户认证回调
+# User authentication callback
 @cl.password_auth_callback
 def auth_callback(username: str, password: str) -> Optional[cl.User]:
     user = read_user(username)
     if user and bcrypt.checkpw(password.encode('utf-8'), user['password_hash'].encode('utf-8')):
         return cl.User(identifier=username, metadata={"role": "user", "provider": "credentials"})
     elif not user:
-        # 自动注册用户
         password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         write_user(username, password_hash)
         return cl.User(identifier=username, metadata={"role": "user", "provider": "credentials"})
@@ -103,15 +118,15 @@ def auth_callback(username: str, password: str) -> Optional[cl.User]:
         return None
 
 
-# 聊天开始回调
+# Chat start callback
 @cl.on_chat_start
 async def on_chat_start():
     cl.user_session.set("memory", ConversationBufferMemory(return_messages=True))
-    setup_runnable()
-    await cl.Message(content="我是基于" + settings.get("model") + "的API接口的聊天机器人，请随时向我提问 :)").send()
+    cl.user_session.set("search_option", None)
+    await cl.Message(content=opening_line).send()
 
 
-# 聊天恢复回调
+# Chat resume callback
 @cl.on_chat_resume
 async def on_chat_resume(thread: ThreadDict):
     memory = ConversationBufferMemory(return_messages=True)
@@ -122,19 +137,48 @@ async def on_chat_resume(thread: ThreadDict):
         else:
             memory.chat_memory.add_ai_message(message["output"])
     cl.user_session.set("memory", memory)
-    setup_runnable()
+    cl.user_session.set("search_option", None)
+    await cl.Message(content=opening_line).send()
 
 
-# 消息处理回调
+# Message handling callback
 @cl.on_message
 async def on_message(message: cl.Message):
     memory = cl.user_session.get("memory")  # type: ConversationBufferMemory
     message_history = cl.user_session.get("message_history", [])
+    search_option = cl.user_session.get("search_option")
+
+    if search_option is None:
+        if message.content.strip().lower() == "是":
+            cl.user_session.set("search_option", True)
+            await cl.Message(content="网络搜索已开启，请输入您的问题 :)").send()
+        elif message.content.strip().lower() == "否":
+            cl.user_session.set("search_option", False)
+            await cl.Message(content="网络搜索未开启，请输入您的问题 :)").send()
+        else:
+            await cl.Message(content="无效输入，请输入“是”或“否” :)").send()
+        return
 
     message_history.append({"role": "user", "content": message.content})
     cl.user_session.set("message_history", message_history)
 
     try:
+        if cl.user_session.get("search_option"):
+            # Bing search API call
+            search_results = search(message.content)
+            search_prompts = [
+                f"来源:\n标题: {result['name']}\n网址: {result['url']}\n内容: {result['snippet']}\n" for result in search_results
+            ]
+            search_content = "Use the following sources to answer the question:\n\n".join(search_prompts) + "\n\nQuestion: " + message.content + "\n\n"
+
+            # Sending the search results to the user
+            await cl.Message(content=search_content).send()
+
+            # Add search results to the message history
+            message_history.append({"role": "system", "content": search_content})
+            cl.user_session.set("message_history", message_history)
+
+        # Sending message to Llama 3.1
         msg = cl.Message(content="")
         await msg.send()
 
@@ -153,13 +197,14 @@ async def on_message(message: cl.Message):
         error_message = f"An error occurred: {str(e)}"
         await cl.Message(content=error_message).send()
 
-    # 更新内存中的聊天历史
+    # Update memory with chat history
     memory.chat_memory.add_user_message(message.content)
     memory.chat_memory.add_ai_message(msg.content)
 
-    # 保存会话状态
+    # Save session state
     cl.user_session.set("memory", memory)
     cl.user_session.set("message_history", message_history)
+
 
 # @cl.on_message
 # async def on_message(message: cl.Message):
