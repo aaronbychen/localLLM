@@ -43,12 +43,13 @@ settings = {
     "presence_penalty": 0,
 }
 
-opening_line = "我是基于" + settings.get("model") + "的API接口的聊天机器人，请随时向我提问 :)\n是否开启网络搜索（是/否）？"
+opening_line = "我是基于" + settings.get("model") + "的API接口的聊天机器人，请随时向我提问 :)"
+
 
 # Function to search using Bing Search API
 def search(query):
     mkt = 'zh-CN'
-    params = {'q': query, 'mkt': mkt, 'freshness': 'Month'}
+    params = {'q': query, 'mkt': mkt}
     headers = {'Ocp-Apim-Subscription-Key': subscription_key}
 
     try:
@@ -149,16 +150,26 @@ async def on_message(message: cl.Message):
     search_option = cl.user_session.get("search_option")
 
     if search_option is None:
-        if message.content.strip().lower() == "是":
-            cl.user_session.set("search_option", True)
-            await cl.Message(content="网络搜索已开启，请输入您的问题 :)").send()
-        elif message.content.strip().lower() == "否":
-            cl.user_session.set("search_option", False)
-            await cl.Message(content="网络搜索未开启，请输入您的问题 :)").send()
-        else:
-            await cl.Message(content="无效输入，请输入“是”或“否” :)").send()
+        cl.user_session.set("first_question", message.content)
+        await cl.Message(content="是否开启网络搜索（是/否）？").send()
+        cl.user_session.set("search_option", "pending")
         return
 
+    if search_option == "pending":
+        if message.content.strip().lower() == "是":
+            cl.user_session.set("search_option", True)
+            await cl.Message(content="网络搜索已开启，请继续您的问题。").send()
+        elif message.content.strip().lower() == "否":
+            cl.user_session.set("search_option", False)
+            await cl.Message(content="网络搜索未开启，请继续您的问题。").send()
+        else:
+            await cl.Message(content="无效输入，请输入“是”或“否”。").send()
+        return
+
+    if cl.user_session.get("search_option") == "pending":
+        return
+
+    message_history.append({"role": "user", "content": cl.user_session.get("first_question")})
     message_history.append({"role": "user", "content": message.content})
     cl.user_session.set("message_history", message_history)
 
@@ -167,9 +178,11 @@ async def on_message(message: cl.Message):
             # Bing search API call
             search_results = search(message.content)
             search_prompts = [
-                f"来源:\n标题: {result['name']}\n网址: {result['url']}\n内容: {result['snippet']}\n" for result in search_results
+                f"来源:\n标题: {result['name']}\n网址: {result['url']}\n内容: {result['snippet']}\n" for result in
+                search_results
             ]
-            search_content = "Use the following sources to answer the question:\n\n".join(search_prompts) + "\n\nQuestion: " + message.content + "\n\n"
+            search_content = "Use the following sources to answer the question:\n\n".join(
+                search_prompts) + "\n\nQuestion: " + message.content + "\n\n"
 
             # Sending the search results to the user
             await cl.Message(content=search_content).send()
