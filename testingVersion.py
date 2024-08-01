@@ -1,7 +1,6 @@
 import os
 from pprint import pprint
 import requests
-from dotenv import load_dotenv
 from operator import itemgetter
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -15,6 +14,7 @@ import chainlit as cl
 import bcrypt
 import mysql.connector
 from openai import AsyncOpenAI
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -86,7 +86,7 @@ def setup_runnable():
     model = ChatOpenAI(streaming=True)
     prompt = ChatPromptTemplate.from_messages(
         [
-            ("system", "You are a helpful assistant. Answer every dialogue in Chinese."),
+            ("system", "You are a extremely helpful chatbot. Answer every dialogue in Chinese. Your name is 小驼"),
             MessagesPlaceholder(variable_name="history"),
             ("human", "{question}"),
         ]
@@ -110,13 +110,53 @@ async def chat_profile(current_user: cl.User):
             name="llama-3.1-405b",
             markdown_description="底层LLM模型为**llama-3.1**，有**4050亿**级参数",
             icon="https://autogpt.net/wp-content/uploads/2023/08/Pogla_Dive_into_Code_Llama_Meta_Platforms_innovative_AI_tool_se_672579a4-772b-4fc7-9522-43026b62a2a4-768x512.jpg",
+            starters=[
+                cl.Starter(
+                    label="校对文字",
+                    message="帮我校对下面这段文字，高亮修改处，以及列出哪里被修改了：“近日，一家公司发布了一款全新智能手机，该手机配被了最新的处理器和高像素摄像头，此外还具备长效电池和防水功能。据城，这款手机将在本月底正式上市销售。然而，用户需要注意的是，由于供货量有限，可能会出现依时断货的情况。此手机在市场上的定价预计会非常具有竞征力，是消费者的一个理想选择。”",
+                    icon="/public/proofread.svg",
+                ),
+                cl.Starter(
+                    label="内容创作",
+                    message="给我写一段300字的示例新闻稿，内容不限，要求文笔清晰，有逻辑条理",
+                    icon="/public/content.svg",
+                ),
+            ]
         ),
         cl.ChatProfile(
             name="llama-3.1-405b & Bing",
             markdown_description="底层LLM模型为**llama-3.1**，有**4050亿**级参数，集成了**必应**搜索，消耗资源稍多，暂不支持上下文（试用）",
             icon="https://logos-world.net/wp-content/uploads/2021/02/Bing-Emblem.png",
+            starters=[
+                cl.Starter(
+                    label="剩余天数",
+                    message="2024年还剩下多少天？",
+                    icon="/public/time.svg",
+                ),
+                cl.Starter(
+                    label="新闻搜索",
+                    message="2024年八月有什么新闻？",
+                    icon="/public/news.svg",
+                ),
+            ]
         ),
     ]
+
+
+# @cl.set_starters
+# async def set_starters():
+#     return [
+#         cl.Starter(
+#             label="校对文字",
+#             message="帮我校对下面这段文字，高亮修改处，以及列出哪里被修改了：”近日，一家公司发布了一款全新智能手机，该手机配被了最新的处理器和高像素摄像头，此外还具备长效电池和防水功能。据城，这款手机将在本月底正式上市销售。然而，用户需要注意的是，由于供货量有限，可能会出现依时断货的情况。此手机在市场上的定价预计会非常具有竞征力，是消费者的一个理想选择。“",
+#             icon="/public/proofread.svg",
+#         ),
+#         cl.Starter(
+#             label="内容创作",
+#             message="给我写一段300字的示例新闻稿，内容不限，要求文笔清晰，有逻辑条理",
+#             icon="/public/content.svg",
+#         ),
+#     ]
 
 
 # User authentication callback
@@ -138,8 +178,8 @@ def auth_callback(username: str, password: str) -> Optional[cl.User]:
 async def on_chat_start():
     cl.user_session.set("memory", ConversationBufferMemory(return_messages=True))
     cl.user_session.set("search_option", None)
-    current_profile = cl.user_session.get("chat_profile")
-    await cl.Message(content="我是基于" + current_profile + "的API接口的聊天机器人，请随时向我提问 :)").send()
+    # current_profile = cl.user_session.get("chat_profile")
+    # await cl.Message(content="我是商报数智，一个基于" + current_profile + "大模型的问答智能体，请随时向我提问 :)").send()
 
 
 # Chat resume callback
@@ -182,8 +222,7 @@ async def on_message(message: cl.Message):
                 f"来源:\n标题: {result['name']}\n网址: {result['url']}\n内容: {result['snippet']}\n" for result in
                 search_results
             ]
-            search_content = "Use the following sources to answer the question:\n\n".join(
-                search_prompts) + "\n\nQuestion: " + message.content + "\n\n"
+            search_content = "Use the following sources to answer the question:\n\n".join(search_prompts) + "\n\nQuestion: " + message.content + "\n\n"
 
             # Sending the search results to the user
             await cl.Message(content=search_content).send()
