@@ -43,7 +43,6 @@ settings = {
     "presence_penalty": 0,
 }
 
-opening_line = "我是基于" + settings.get("model") + "的API接口的聊天机器人，请随时向我提问 :)\n网络搜索花费资源稍多，暂不支持上下文，是否开启网络搜索（是/否）？"
 
 # Function to search using Bing Search API
 def search(query):
@@ -104,6 +103,22 @@ def setup_runnable():
     cl.user_session.set("runnable", runnable)
 
 
+@cl.set_chat_profiles
+async def chat_profile(current_user: cl.User):
+    return [
+        cl.ChatProfile(
+            name="llama-3.1-405b",
+            markdown_description="底层LLM模型为**llama-3.1**，有**4050亿**级参数",
+            icon="https://autogpt.net/wp-content/uploads/2023/08/Pogla_Dive_into_Code_Llama_Meta_Platforms_innovative_AI_tool_se_672579a4-772b-4fc7-9522-43026b62a2a4-768x512.jpg",
+        ),
+        cl.ChatProfile(
+            name="llama-3.1-405b & Bing",
+            markdown_description="底层LLM模型为**llama-3.1**，有**4050亿**级参数，集成了**必应**搜索，消耗资源稍多，暂不支持上下文（试用）",
+            icon="https://logos-world.net/wp-content/uploads/2021/02/Bing-Emblem.png",
+        ),
+    ]
+
+
 # User authentication callback
 @cl.password_auth_callback
 def auth_callback(username: str, password: str) -> Optional[cl.User]:
@@ -123,7 +138,8 @@ def auth_callback(username: str, password: str) -> Optional[cl.User]:
 async def on_chat_start():
     cl.user_session.set("memory", ConversationBufferMemory(return_messages=True))
     cl.user_session.set("search_option", None)
-    await cl.Message(content=opening_line).send()
+    current_profile = cl.user_session.get("chat_profile")
+    await cl.Message(content="我是基于" + current_profile + "的API接口的聊天机器人，请随时向我提问 :)").send()
 
 
 # Chat resume callback
@@ -138,7 +154,7 @@ async def on_chat_resume(thread: ThreadDict):
             memory.chat_memory.add_ai_message(message["output"])
     cl.user_session.set("memory", memory)
     cl.user_session.set("search_option", None)
-    await cl.Message(content=opening_line).send()
+    await cl.Message("").send()
 
 
 # Message handling callback
@@ -148,16 +164,12 @@ async def on_message(message: cl.Message):
     message_history = cl.user_session.get("message_history", [])
     search_option = cl.user_session.get("search_option")
 
+    # Get the current chat profile information
+    current_profile = cl.user_session.get("chat_profile")
+
     if search_option is None:
-        if message.content.strip().lower() == "是":
+        if current_profile == "llama-3.1-405b & Bing":
             cl.user_session.set("search_option", True)
-            await cl.Message(content="网络搜索已开启，请输入您的问题 :)").send()
-        elif message.content.strip().lower() == "否":
-            cl.user_session.set("search_option", False)
-            await cl.Message(content="网络搜索未开启，请输入您的问题 :)").send()
-        else:
-            await cl.Message(content="无效输入，请输入“是”或“否” :)").send()
-        return
 
     message_history.append({"role": "user", "content": message.content})
     cl.user_session.set("message_history", message_history)
@@ -167,9 +179,11 @@ async def on_message(message: cl.Message):
             # Bing search API call
             search_results = search(message.content)
             search_prompts = [
-                f"来源:\n标题: {result['name']}\n网址: {result['url']}\n内容: {result['snippet']}\n" for result in search_results
+                f"来源:\n标题: {result['name']}\n网址: {result['url']}\n内容: {result['snippet']}\n" for result in
+                search_results
             ]
-            search_content = "Use the following sources to answer the question:\n\n".join(search_prompts) + "\n\nQuestion: " + message.content + "\n\n"
+            search_content = "Use the following sources to answer the question:\n\n".join(
+                search_prompts) + "\n\nQuestion: " + message.content + "\n\n"
 
             # Sending the search results to the user
             await cl.Message(content=search_content).send()
@@ -204,7 +218,6 @@ async def on_message(message: cl.Message):
     # Save session state
     cl.user_session.set("memory", memory)
     cl.user_session.set("message_history", message_history)
-
 
 # @cl.on_message
 # async def on_message(message: cl.Message):
