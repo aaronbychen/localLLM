@@ -1,14 +1,16 @@
-# Welcome to Chainlit! 🚀🤖
+# 欢迎使用中国商报社数据智汇平台！ 🚀📊
 
-Hi there, Developer! 👋 We're excited to have you on board. Chainlit is a powerful tool designed to help you prototype, debug and share applications built on top of LLMs.
+你好！👋 欢迎你加入中国商报社数据智汇平台。这个强大的工具旨在帮助你使用大语言模型（LLMs），只需要在下方聊天框进行提问，实现文字校对，内容创作等功能。
 
-## Useful Links 🔗
+## 平台功能 🎯
 
-- **Documentation:** Get started with our comprehensive [Chainlit Documentation](https://docs.chainlit.io) 📚
-- **Discord Community:** Join our friendly [Chainlit Discord](https://discord.gg/k73SQ3FyUh) to ask questions, share your projects, and connect with other developers! 💬
+* **智能问答**：基于先进的自然语言处理技术，平台能够回答各种问题，提供准确的信息
+* **文本生成**：支持自动生成高质量文本，适用于新闻写作、市场分析等多种场景
+* **账户鉴权与数据持久性**：不同的账户会保存不同的问答历史，并且会在多平台保存
+* **多模态**：可以在不同的平台（如手机）使用相同的账户登录，获得无缝的操作体验
+* **数据分析与处理**：提供高效的数据分析和处理功能，帮助你从海量数据中提取有价值的信息
+* **搜索集成**：除了强大的模型生成，还可以在上方选择集成了必应搜索引擎的模型版本（试用）
+* **安全与隐私**：采用最新的安全措施，确保你的数据和隐私得到保护
+* **外观**：可以切换亮暗模式
 
-We can't wait to see what you create with Chainlit! Happy coding! 💻😊
-
-## Welcome screen
-
-To modify the welcome screen, edit the `chainlit.md` file at the root of your project. If you do not want a welcome screen, just leave this file empty.
+我们期待看到你使用中国商报社数据智汇平台创造的精彩内容！💻😊

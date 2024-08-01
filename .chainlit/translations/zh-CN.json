@@ -45,7 +45,7 @@
       },
       "auth": {
         "authLogin": {
-          "title": "登录（首次登录自动注册）",
+          "title": "登录（首次自动注册）",
           "form": {
             "email": "电子邮箱地址",
             "password": "密码",
@@ -61,7 +61,7 @@
             "passwordRequired": "密码是必填字段"
           },
           "error": {
-            "default": "无法登录",
+            "default": "无法登录，检查邮箱与密码",
             "signin": "尝试使用其他账户登录。",
             "oauthsignin": "尝试使用其他账户登录。",
             "redirect_uri_mismatch": "重定向 URI 不匹配 OAuth 应用配置。",
