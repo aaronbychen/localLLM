@@ -36,7 +36,7 @@ BASE_URL = "https://api.deepbricks.ai/v1/"
 client = AsyncOpenAI(api_key=API_KEY, base_url=BASE_URL)
 settings = {
     "model": "llama-3.1-405b",
-    "temperature": 1,
+    "temperature": 0,
     "max_tokens": 4095,
     "top_p": 1,
     "frequency_penalty": 0,
