@@ -53,10 +53,10 @@ edit_message = true
 
 [UI]
 # Name of the assistant.
-name = "中国商报社数据智汇平台"
+name = "AC Assistant"
 
 # Description of the assistant. This is used for HTML tags.
- description = "中国商报社数据智汇平台"
+ description = "AC Assistant"
 
 # Large size content are by default collapsed for a cleaner ui
 default_collapse_content = true
