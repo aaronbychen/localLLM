@@ -35,13 +35,13 @@ API_KEY = os.getenv("API_KEY")
 BASE_URL = "https://api.deepbricks.ai/v1/"
 client = AsyncOpenAI(api_key=API_KEY, base_url=BASE_URL)
 settings = {
-    "model": "llama-3.1-405b",
+    "model": "claude-3.5-sonnet",
     "temperature": 0.2,
     "max_tokens": 4095,
     "top_p": 1,
     "frequency_penalty": 0,
     "presence_penalty": 0,
-}
+}     
 
 
 # Function to search using Bing Search API
