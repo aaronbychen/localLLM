@@ -107,9 +107,9 @@ def setup_runnable():
 async def chat_profile(current_user: cl.User):
     return [
         cl.ChatProfile(
-            name="llama-3.1-405b",
+            name=settings.get("model"),
             markdown_description="底层LLM模型为**llama-3.1**，有**4050亿**级参数",
-            icon="https://autogpt.net/wp-content/uploads/2023/08/Pogla_Dive_into_Code_Llama_Meta_Platforms_innovative_AI_tool_se_672579a4-772b-4fc7-9522-43026b62a2a4-768x512.jpg",
+            icon="https://www.shutterstock.com/image-vector/letter-llm-logo-template-vector-260nw-1673993428.jpg",
             starters=[
                 cl.Starter(
                     label="校对文字",
@@ -124,7 +124,7 @@ async def chat_profile(current_user: cl.User):
             ]
         ),
         cl.ChatProfile(
-            name="llama-3.1-405b & Bing",
+            name=settings.get("model") + " & Bing",
             markdown_description="底层LLM模型为**llama-3.1**，有**4050亿**级参数，集成了**必应**搜索，消耗资源稍多，暂不支持上下文（试用）",
             icon="https://logos-world.net/wp-content/uploads/2021/02/Bing-Emblem.png",
             starters=[
