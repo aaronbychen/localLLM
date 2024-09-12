@@ -35,7 +35,9 @@ API_KEY = os.getenv("API_KEY")
 BASE_URL = "https://api.deepbricks.ai/v1/"
 client = AsyncOpenAI(api_key=API_KEY, base_url=BASE_URL)
 settings = {
-    "model": "llama-3.1-405b",
+    # "model": "llama-3.1-405b",
+    # "model": "claude-3.5-sonnet",
+    "model": "gpt-4-turbo",
     "temperature": 0,
     "max_tokens": 4095,
     "top_p": 1,
