@@ -35,9 +35,9 @@ API_KEY = os.getenv("API_KEY")
 BASE_URL = "https://api.deepbricks.ai/v1/"
 client = AsyncOpenAI(api_key=API_KEY, base_url=BASE_URL)
 settings = {
-    # "model": "llama-3.1-405b",
+    "model": "llama-3.1-405b",
     # "model": "claude-3.5-sonnet",
-    "model": "gpt-4-turbo",
+    # "model": "gpt-4-turbo",
     "temperature": 0,
     "max_tokens": 4095,
     "top_p": 1,
@@ -45,6 +45,11 @@ settings = {
     "presence_penalty": 0,
 }     
 
+model_icon_map = {
+    "llama-3.1-405b": "https://deepbricks.oss-us-west-1.aliyuncs.com/gpt-icons/llama3.png",
+    "claude-3.5-sonnet": "https://deepbricks.oss-us-west-1.aliyuncs.com/gpt-icons/claude.svg",
+    "gpt-4-turbo": "https://deepbricks.oss-us-west-1.aliyuncs.com/gpt-icons/gpt4.svg"
+}
 
 # Function to search using Bing Search API
 def search(query):
@@ -110,8 +115,8 @@ async def chat_profile(current_user: cl.User):
     return [
         cl.ChatProfile(
             name=settings.get("model"),
-            markdown_description="底层LLM模型为**llama-3.1**，有**4050亿**级参数",
-            icon="https://www.shutterstock.com/image-vector/letter-llm-logo-template-vector-260nw-1673993428.jpg",
+            markdown_description="底层LLM模型为**" + settings.get("model") + "**",
+            icon=model_icon_map.get(settings.get("model"), "https://www.shutterstock.com/image-vector/letter-llm-logo-template-vector-260nw-1673993428.jpg"),
             starters=[
                 cl.Starter(
                     label="校对文字",
@@ -127,7 +132,7 @@ async def chat_profile(current_user: cl.User):
         ),
         cl.ChatProfile(
             name=settings.get("model") + " & Bing",
-            markdown_description="底层LLM模型为**llama-3.1**，有**4050亿**级参数，集成了**必应**搜索，消耗资源稍多，暂不支持上下文（试用）",
+            markdown_description="底层LLM模型为**" + settings.get("model") + "**，集成了**必应**搜索，消耗资源稍多，暂不支持上下文（试用）",
             icon="https://logos-world.net/wp-content/uploads/2021/02/Bing-Emblem.png",
             starters=[
                 cl.Starter(
