@@ -5,8 +5,8 @@ from operator import itemgetter
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.schema.output_parser import StrOutputParser
-from langchain.schema.runnable import Runnable, RunnablePassthrough, RunnableLambda
-from langchain.schema.runnable.config import RunnableConfig
+# from langchain.schema.runnable import Runnable, RunnablePassthrough, RunnableLambda
+# from langchain.schema.runnable.config import RunnableConfig
 from langchain.memory import ConversationBufferMemory
 from chainlit.types import ThreadDict
 from typing import Optional
@@ -80,26 +80,26 @@ def write_user(username, password_hash):
 
 
 # Setup runnable model
-def setup_runnable():
-    memory = cl.user_session.get("memory")  # type: ConversationBufferMemory
-    model = ChatOpenAI(streaming=True)
-    prompt = ChatPromptTemplate.from_messages(
-        [
-            ("system", "You are a extremely helpful chatbot. Answer every dialogue in Chinese. Your name is 小驼"),
-            MessagesPlaceholder(variable_name="history"),
-            ("human", "{question}"),
-        ]
-    )
-
-    runnable = (
-            RunnablePassthrough.assign(
-                history=RunnableLambda(memory.load_memory_variables) | itemgetter("history")
-            )
-            | prompt
-            | model
-            | StrOutputParser()
-    )
-    cl.user_session.set("runnable", runnable)
+# def setup_runnable():
+#     memory = cl.user_session.get("memory")  # type: ConversationBufferMemory
+#     model = ChatOpenAI(streaming=True)
+#     prompt = ChatPromptTemplate.from_messages(
+#         [
+#             ("system", "You are a extremely helpful chatbot. Answer every dialogue in Chinese. Your name is 小驼"),
+#             MessagesPlaceholder(variable_name="history"),
+#             ("human", "{question}"),
+#         ]
+#     )
+#
+#     runnable = (
+#             RunnablePassthrough.assign(
+#                 history=RunnableLambda(memory.load_memory_variables) | itemgetter("history")
+#             )
+#             | prompt
+#             | model
+#             | StrOutputParser()
+#     )
+#     cl.user_session.set("runnable", runnable)
 
 
 @cl.set_chat_profiles
