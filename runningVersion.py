@@ -262,6 +262,7 @@ async def on_message(message: cl.Message):
         msg = cl.Message(content="")
         await msg.send()
 
+        settings["model"] = current_profile
         stream = await client.chat.completions.create(
             messages=message_history, stream=True, **settings
         )
