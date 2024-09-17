@@ -36,19 +36,11 @@ BASE_URL = "https://api.deepbricks.ai/v1/"
 client = AsyncOpenAI(api_key=API_KEY, base_url=BASE_URL)
 settings = {
     "model": "llama-3.1-405b",
-    # "model": "claude-3.5-sonnet",
-    # "model": "gpt-4-turbo",
     "temperature": 0,
     "max_tokens": 4095,
     "top_p": 1,
     "frequency_penalty": 0,
     "presence_penalty": 0,
-}     
-
-model_icon_map = {
-    "llama-3.1-405b": "https://deepbricks.oss-us-west-1.aliyuncs.com/gpt-icons/llama3.png",
-    "claude-3.5-sonnet": "https://deepbricks.oss-us-west-1.aliyuncs.com/gpt-icons/claude.svg",
-    "gpt-4-turbo": "https://deepbricks.oss-us-west-1.aliyuncs.com/gpt-icons/gpt4.svg"
 }
 
 # Function to search using Bing Search API
@@ -112,11 +104,21 @@ def setup_runnable():
 
 @cl.set_chat_profiles
 async def chat_profile(current_user: cl.User):
+    models = [
+        "llama-3.1-405b",
+        "claude-3.5-sonnet",
+        "gpt-4-turbo"
+    ]
+    model_icon_map = {
+        "llama-3.1-405b": "https://deepbricks.oss-us-west-1.aliyuncs.com/gpt-icons/llama3.png",
+        "claude-3.5-sonnet": "https://deepbricks.oss-us-west-1.aliyuncs.com/gpt-icons/claude.svg",
+        "gpt-4-turbo": "https://deepbricks.oss-us-west-1.aliyuncs.com/gpt-icons/gpt4.svg"
+    }
     return [
         cl.ChatProfile(
-            name=settings.get("model"),
-            markdown_description="底层LLM模型为**" + settings.get("model") + "**",
-            icon=model_icon_map.get(settings.get("model"), "https://www.shutterstock.com/image-vector/letter-llm-logo-template-vector-260nw-1673993428.jpg"),
+            name=models[0],
+            markdown_description="底层LLM模型为**" + models[0] + "**",
+            icon=model_icon_map.get(models[0], "https://www.shutterstock.com/image-vector/letter-llm-logo-template-vector-260nw-1673993428.jpg"),
             starters=[
                 cl.Starter(
                     label="校对文字",
@@ -131,22 +133,56 @@ async def chat_profile(current_user: cl.User):
             ]
         ),
         cl.ChatProfile(
-            name=settings.get("model") + " & Bing",
-            markdown_description="底层LLM模型为**" + settings.get("model") + "**，集成了**必应**搜索，消耗资源稍多，暂不支持上下文（试用）",
-            icon="https://logos-world.net/wp-content/uploads/2021/02/Bing-Emblem.png",
+            name=models[1],
+            markdown_description="底层LLM模型为**" + models[1] + "**",
+            icon=model_icon_map.get(models[1], "https://www.shutterstock.com/image-vector/letter-llm-logo-template-vector-260nw-1673993428.jpg"),
             starters=[
                 cl.Starter(
-                    label="剩余天数",
-                    message="2024年还剩下多少天？",
-                    icon="/public/time.svg",
+                    label="校对文字",
+                    message="帮我校对下面这段文字，标粗修改处，以及列出哪里被修改了：“近日，一家公司发布了一款全新智能手机，该手机配被了最新的处理器和高像素摄像头，此外还具备长效电池和防水功能。据城，这款手机将在本月底正式上市销售。然而，用户需要注意的是，由于供货量有限，可能会出现依时断货的情况。此手机在市场上的定价预计会非常具有竞征力，是消费者的一个理想选择。”",
+                    icon="/public/proofread.jpg",
                 ),
                 cl.Starter(
-                    label="新闻搜索",
-                    message="2024年八月有什么新闻？",
-                    icon="/public/news.svg",
+                    label="内容创作",
+                    message="给我写一段300字的示例新闻稿，内容不限，要求文笔清晰，有逻辑条理",
+                    icon="/public/content.svg",
                 ),
             ]
         ),
+        cl.ChatProfile(
+            name=models[2],
+            markdown_description="底层LLM模型为**" + models[2] + "**",
+            icon=model_icon_map.get(models[2], "https://www.shutterstock.com/image-vector/letter-llm-logo-template-vector-260nw-1673993428.jpg"),
+            starters=[
+                cl.Starter(
+                    label="校对文字",
+                    message="帮我校对下面这段文字，标粗修改处，以及列出哪里被修改了：“近日，一家公司发布了一款全新智能手机，该手机配被了最新的处理器和高像素摄像头，此外还具备长效电池和防水功能。据城，这款手机将在本月底正式上市销售。然而，用户需要注意的是，由于供货量有限，可能会出现依时断货的情况。此手机在市场上的定价预计会非常具有竞征力，是消费者的一个理想选择。”",
+                    icon="/public/proofread.jpg",
+                ),
+                cl.Starter(
+                    label="内容创作",
+                    message="给我写一段300字的示例新闻稿，内容不限，要求文笔清晰，有逻辑条理",
+                    icon="/public/content.svg",
+                ),
+            ]
+        )
+        # cl.ChatProfile(
+        #     name=settings.get("model") + " & Bing",
+        #     markdown_description="底层LLM模型为**" + settings.get("model") + "**，集成了**必应**搜索，消耗资源稍多，暂不支持上下文（试用）",
+        #     icon="https://logos-world.net/wp-content/uploads/2021/02/Bing-Emblem.png",
+        #     starters=[
+        #         cl.Starter(
+        #             label="剩余天数",
+        #             message="2024年还剩下多少天？",
+        #             icon="/public/time.svg",
+        #         ),
+        #         cl.Starter(
+        #             label="新闻搜索",
+        #             message="2024年八月有什么新闻？",
+        #             icon="/public/news.svg",
+        #         ),
+        #     ]
+        # ),
     ]
 
 
