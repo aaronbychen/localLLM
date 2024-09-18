@@ -1,12 +1,4 @@
 import os
-from pprint import pprint
-import requests
-from operator import itemgetter
-from langchain_openai import ChatOpenAI
-from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.schema.output_parser import StrOutputParser
-# from langchain.schema.runnable import Runnable, RunnablePassthrough, RunnableLambda
-# from langchain.schema.runnable.config import RunnableConfig
 from langchain.memory import ConversationBufferMemory
 from chainlit.types import ThreadDict
 from typing import Optional
@@ -43,19 +35,6 @@ settings = {
     "presence_penalty": 0,
 }
 
-# Function to search using Bing Search API
-def search(query):
-    mkt = 'zh-CN'
-    params = {'q': query, 'mkt': mkt}
-    headers = {'Ocp-Apim-Subscription-Key': subscription_key}
-
-    try:
-        response = requests.get(endpoint, headers=headers, params=params)
-        response.raise_for_status()
-        return response.json()['webPages']['value']
-    except Exception as ex:
-        raise ex
-
 
 # Database connection and user management functions
 def get_db_connection():
@@ -77,29 +56,6 @@ def write_user(username, password_hash):
     cursor.execute("INSERT INTO users (username, password_hash) VALUES (%s, %s)", (username, password_hash))
     conn.commit()
     conn.close()
-
-
-# Setup runnable model
-# def setup_runnable():
-#     memory = cl.user_session.get("memory")  # type: ConversationBufferMemory
-#     model = ChatOpenAI(streaming=True)
-#     prompt = ChatPromptTemplate.from_messages(
-#         [
-#             ("system", "You are a extremely helpful chatbot. Answer every dialogue in Chinese. Your name is 小驼"),
-#             MessagesPlaceholder(variable_name="history"),
-#             ("human", "{question}"),
-#         ]
-#     )
-#
-#     runnable = (
-#             RunnablePassthrough.assign(
-#                 history=RunnableLambda(memory.load_memory_variables) | itemgetter("history")
-#             )
-#             | prompt
-#             | model
-#             | StrOutputParser()
-#     )
-#     cl.user_session.set("runnable", runnable)
 
 
 @cl.set_chat_profiles
@@ -166,23 +122,6 @@ async def chat_profile(current_user: cl.User):
                 ),
             ]
         )
-        # cl.ChatProfile(
-        #     name=settings.get("model") + " & Bing",
-        #     markdown_description="底层LLM模型为**" + settings.get("model") + "**，集成了**必应**搜索，消耗资源稍多，暂不支持上下文（试用）",
-        #     icon="https://logos-world.net/wp-content/uploads/2021/02/Bing-Emblem.png",
-        #     starters=[
-        #         cl.Starter(
-        #             label="剩余天数",
-        #             message="2024年还剩下多少天？",
-        #             icon="/public/time.svg",
-        #         ),
-        #         cl.Starter(
-        #             label="新闻搜索",
-        #             message="2024年八月有什么新闻？",
-        #             icon="/public/news.svg",
-        #         ),
-        #     ]
-        # ),
     ]
 
 
@@ -204,9 +143,6 @@ def auth_callback(username: str, password: str) -> Optional[cl.User]:
 @cl.on_chat_start
 async def on_chat_start():
     cl.user_session.set("memory", ConversationBufferMemory(return_messages=True))
-    cl.user_session.set("search_option", None)
-    # current_profile = cl.user_session.get("chat_profile")
-    # await cl.Message(content="我是商报数智，一个基于" + current_profile + "大模型的问答智能体，请随时向我提问 :)").send()
 
 
 # Chat resume callback
@@ -220,7 +156,6 @@ async def on_chat_resume(thread: ThreadDict):
         else:
             memory.chat_memory.add_ai_message(message["output"])
     cl.user_session.set("memory", memory)
-    cl.user_session.set("search_option", None)
     await cl.Message("").send()
 
 
@@ -229,36 +164,11 @@ async def on_chat_resume(thread: ThreadDict):
 async def on_message(message: cl.Message):
     memory = cl.user_session.get("memory")  # type: ConversationBufferMemory
     message_history = cl.user_session.get("message_history", [])
-    search_option = cl.user_session.get("search_option")
-
-    # Get the current chat profile information
     current_profile = cl.user_session.get("chat_profile")
-
-    if search_option is None:
-        if current_profile == "llama-3.1-405b & Bing":
-            cl.user_session.set("search_option", True)
-
     message_history.append({"role": "user", "content": message.content})
     cl.user_session.set("message_history", message_history)
 
     try:
-        if cl.user_session.get("search_option"):
-            # Bing search API call
-            search_results = search(message.content)
-            search_prompts = [
-                f"来源:\n标题: {result['name']}\n网址: {result['url']}\n内容: {result['snippet']}\n" for result in
-                search_results
-            ]
-            search_content = "Use the following sources to answer the question:\n\n".join(search_prompts) + "\n\nQuestion: " + message.content + "\n\n"
-
-            # Sending the search results to the user
-            await cl.Message(content=search_content).send()
-
-            # Add search results to the message history
-            message_history.append({"role": "system", "content": search_content})
-            cl.user_session.set("message_history", message_history)
-
-        # Sending message to Llama 3.1
         msg = cl.Message(content="")
         await msg.send()
 
@@ -285,22 +195,3 @@ async def on_message(message: cl.Message):
     # Save session state
     cl.user_session.set("memory", memory)
     cl.user_session.set("message_history", message_history)
-
-# @cl.on_message
-# async def on_message(message: cl.Message):
-#     memory = cl.user_session.get("memory")  # type: ConversationBufferMemory
-#
-#     runnable = cl.user_session.get("runnable")  # type: Runnable
-#
-#     res = cl.Message(content="")
-#
-#     async for chunk in runnable.astream(
-#             {"question": message.content},
-#             config=RunnableConfig(callbacks=[cl.LangchainCallbackHandler()]),
-#     ):
-#         await res.stream_token(chunk)
-#
-#     await res.send()
-#
-#     memory.chat_memory.add_user_message(message.content)
-#     memory.chat_memory.add_ai_message(res.content)
