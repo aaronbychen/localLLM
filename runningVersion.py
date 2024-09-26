@@ -93,6 +93,7 @@ async def chat_profile(current_user: cl.User):
         cl.ChatProfile(
             name=models[1],
             markdown_description="**GPT-4o** (“o” for “omni”) is a step towards much more natural human-computer interaction—it accepts as input any combination of text, audio, image, and video.",
+            icon=model_icon_map.get(models[1], "https://www.shutterstock.com/image-vector/letter-llm-logo-template-vector-260nw-1673993428.jpg"),
             starters=[
                 cl.Starter(
                     label="Code Debug",
