@@ -1,16 +1,19 @@
+import os
 from openai import AsyncOpenAI
 import chainlit as cl
+from dotenv import load_dotenv
 
-API_KEY = ""
-BASE_URL = ""
+load_dotenv()
+
+API_KEY = os.getenv("API_KEY")
+BASE_URL = "https://api.deepbricks.ai/v1/"
 
 client = AsyncOpenAI(api_key=API_KEY, base_url=BASE_URL)
 
-
 settings = {
-    "model": "llama-3.1-405b",
-    "temperature": 0.7,
-    "max_tokens": 4095,
+    "model": "deepseek-r1",
+    "temperature": 0,
+    "max_tokens": 4096,
     "top_p": 1,
     "frequency_penalty": 0,
     "presence_penalty": 0,
@@ -21,9 +24,9 @@ settings = {
 async def start_chat():
     cl.user_session.set(
         "message_history",
-        [{"role": "system", "content": "You are a helpful assistant. Answer every dialogue in Chinese."}],
+        [{"role": "system", "content": "You are a helpful assistant."}],
     )
-    welcome_message = "我是基于llama-3.1-405b的API接口的聊天机器人，请随时向我提问 :)"
+    welcome_message = "我是基于"+settings['model']+"的聊天机器人，请随时向我提问 :)"
     await cl.Message(content=welcome_message).send()
 
 
