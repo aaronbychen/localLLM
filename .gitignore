@@ -1,3 +1,6 @@
 .env
 .idea
 .files
+.DS_Store
+.chainlit
+__pycache__
