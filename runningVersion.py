@@ -61,21 +61,23 @@ def write_user(username, password_hash):
 @cl.set_chat_profiles
 async def chat_profile(current_user: cl.User):
     models = [
-        "llama-3.1-405b",
-        "gpt-4o-2024-08-06",
+        "o1-preview",
         "claude-3.5-sonnet",
-        "gpt-4-turbo",
+        "o3-mini",
+        "gpt-4o-2024-08-06",
+        "llama-3.1-405b"
     ]
     model_icon_map = {
-        "llama-3.1-405b": "https://deepbricks.oss-us-west-1.aliyuncs.com/gpt-icons/llama3.png",
-        "gpt-4o-2024-08-06":  "https://deepbricks.oss-us-west-1.aliyuncs.com/gpt-icons/gpt4.svg",
+        "o1-preview": "https://deepbricks.oss-us-west-1.aliyuncs.com/gpt-icons/gpt4.svg",
         "claude-3.5-sonnet": "https://deepbricks.oss-us-west-1.aliyuncs.com/gpt-icons/claude.svg",
-        "gpt-4-turbo": "https://deepbricks.oss-us-west-1.aliyuncs.com/gpt-icons/gpt4.svg"
+        "o3-mini": "https://deepbricks.oss-us-west-1.aliyuncs.com/gpt-icons/gpt4.svg",
+        "gpt-4o-2024-08-06": "https://deepbricks.oss-us-west-1.aliyuncs.com/gpt-icons/gpt4.svg",
+        "llama-3.1-405b": "https://deepbricks.oss-us-west-1.aliyuncs.com/gpt-icons/llama3.png"
     }
     return [
         cl.ChatProfile(
             name=models[0],
-            markdown_description="**Llama 3.1 405B** is the first openly available model that rivals the top AI models when it comes to state-of-the-art capabilities in general knowledge, steerability, math, tool use, and multilingual translation.",
+            markdown_description="OpenAI **o1-preview** is a reflective generative pre-trained transformer (GPT). A preview of o1 was released by OpenAI on September 12, 2024. o1 spends time 'thinking' before it answers, making it better at complex reasoning tasks, science and programming than GPT-4o.",
             icon=model_icon_map.get(models[0], "https://www.shutterstock.com/image-vector/letter-llm-logo-template-vector-260nw-1673993428.jpg"),
             starters=[
                 cl.Starter(
@@ -92,7 +94,7 @@ async def chat_profile(current_user: cl.User):
         ),
         cl.ChatProfile(
             name=models[1],
-            markdown_description="**GPT-4o** (“o” for “omni”) is a step towards much more natural human-computer interaction—it accepts as input any combination of text, audio, image, and video.",
+            markdown_description="**Claude 3.5 Sonnet** sets new industry benchmarks for graduate-level reasoning (GPQA), undergraduate-level knowledge (MMLU), and coding proficiency (HumanEval). It shows marked improvement in grasping nuance, humor, and complex instructions, and is exceptional at writing high-quality content with a natural, relatable tone.",
             icon=model_icon_map.get(models[1], "https://www.shutterstock.com/image-vector/letter-llm-logo-template-vector-260nw-1673993428.jpg"),
             starters=[
                 cl.Starter(
@@ -109,7 +111,7 @@ async def chat_profile(current_user: cl.User):
         ),
         cl.ChatProfile(
             name=models[2],
-            markdown_description="**Claude 3.5 Sonnet** sets new industry benchmarks for graduate-level reasoning (GPQA), undergraduate-level knowledge (MMLU), and coding proficiency (HumanEval). It shows marked improvement in grasping nuance, humor, and complex instructions, and is exceptional at writing high-quality content with a natural, relatable tone.",
+            markdown_description="OpenAI o3 is a reflective generative pre-trained transformer (GPT) model developed by OpenAI as a successor to OpenAI o1. It is designed to devote additional deliberation time when addressing questions that require step-by-step logical reasoning. OpenAI released the smaller model, **o3-mini**, on January 31st, 2025.",
             icon=model_icon_map.get(models[2], "https://www.shutterstock.com/image-vector/letter-llm-logo-template-vector-260nw-1673993428.jpg"),
             starters=[
                 cl.Starter(
@@ -126,8 +128,25 @@ async def chat_profile(current_user: cl.User):
         ),
         cl.ChatProfile(
             name=models[3],
-            markdown_description="**GPT-4**, or Generative Pre-trained Transformer 4, is a multimodal large language model created by OpenAI, and the fourth in its series of GPT foundation models.",
+            markdown_description="**GPT-4o** (“o” for “omni”) is a step towards much more natural human-computer interaction—it accepts as input any combination of text, audio, image, and video.",
             icon=model_icon_map.get(models[3], "https://www.shutterstock.com/image-vector/letter-llm-logo-template-vector-260nw-1673993428.jpg"),
+            starters=[
+                cl.Starter(
+                    label="Code Debug",
+                    message="Help me debug the following code",
+                    icon="/public/proofread.jpg",
+                ),
+                cl.Starter(
+                    label="Code Syntax",
+                    message="Give me the general syntax of the SML language",
+                    icon="/public/content.svg",
+                ),
+            ]
+        ),
+        cl.ChatProfile(
+            name=models[4],
+            markdown_description="**llama 3.1 405B** is the first openly available model that rivals the top AI models when it comes to state-of-the-art capabilities in general knowledge, steerability, math, tool use, and multilingual translation.",
+            icon=model_icon_map.get(models[4], "https://www.shutterstock.com/image-vector/letter-llm-logo-template-vector-260nw-1673993428.jpg"),
             starters=[
                 cl.Starter(
                     label="Code Debug",
