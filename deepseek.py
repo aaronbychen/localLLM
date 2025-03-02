@@ -23,11 +23,13 @@ subscription_key = os.getenv('BING_SEARCH_V7_SUBSCRIPTION_KEY')
 endpoint = os.getenv('BING_SEARCH_V7_ENDPOINT') + "v7.0/search"
 
 # API client configuration for Llama 3.1
-API_KEY = os.getenv("NV_API_KEY")
-BASE_URL = "https://integrate.api.nvidia.com/v1"
+API_KEY = os.getenv("DEEPSEEK_API_KEY")
+# BASE_URL = "https://integrate.api.nvidia.com/v1"
+BASE_URL = "https://api.deepseek.com"
 client = AsyncOpenAI(api_key=API_KEY, base_url=BASE_URL)
 settings = {
-    "model": "deepseek-ai/deepseek-r1",
+    # "model": "deepseek-ai/deepseek-r1",
+    "model": "deepseek-reasoner",
     "temperature": 0,
     "max_tokens": 4096,
     "top_p": 1,
@@ -61,10 +63,12 @@ def write_user(username, password_hash):
 @cl.set_chat_profiles
 async def chat_profile(current_user: cl.User):
     models = [
-        "deepseek-ai/deepseek-r1"
+        # "deepseek-ai/deepseek-r1"
+        "deepseek-reasoner"
     ]
     model_icon_map = {
-        "deepseek-ai/deepseek-r1": "https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/dark/deepseek-color.png"
+        # "deepseek-ai/deepseek-r1": "https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/dark/deepseek-color.png"
+        "deepseek-reasoner": "https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/dark/deepseek-color.png"
     }
     return [
         cl.ChatProfile(
